@@ -1,25 +1,39 @@
 import azure.functions as func
 import logging
+import json
 
-app = func.FunctionApp(http_auth_level=func.AuthLevel.FUNCTION)
+app = func.FunctionApp()
 
-@app.route(route="http_trigger")
-def http_trigger(req: func.HttpRequest) -> func.HttpResponse:
-    logging.info('Python HTTP trigger function processed a request.')
+@app.function_name(name="update_views")
+@app.route(route="views")
+@app.cosmos_db_input(arg_name="inputDocument", 
+                     database_name="view_counter", 
+                     container_name="view_container",
+                     partition_key="f4d02b8e-4fdc-4c26-8434-17d984004ecb",
+                     connection="CosmosDbConnectionSetting")
+@app.cosmos_db_output(arg_name="outputDocument", 
+                     database_name="view_counter", 
+                     container_name="view_container",
+                     create_if_not_exists=True,
+                     connection="CosmosDbConnectionSetting")
 
-    name = req.params.get('name')
-    if not name:
-        try:
-            req_body = req.get_json()
-        except ValueError:
-            pass
-        else:
-            name = req_body.get('name')
+def update_views(inputDocument: func.DocumentList,
+                  outputDocument: func.Out[func.Document],
+                  req: func.HttpRequest) -> func.HttpResponse:
 
-    if name:
-        return func.HttpResponse(f"Hello, {name}. This HTTP triggered function executed successfully.")
-    else:
-        return func.HttpResponse(
-             "This HTTP triggered function executed successfully. Pass a name in the query string or in the request body for a personalized response.",
-             status_code=200
-        )
+    count = inputDocument[0]
+    logging.info(inputDocument[0].to_json())
+
+    current_count = inputDocument[0]['count']
+    logging.info(f'Current count: {current_count}')
+
+    current_count = int(current_count) + 1
+    count['count'] =  current_count
+
+    outputDocument.set(count)
+
+    logging.info(f'New page count: {current_count}')
+
+    return func.HttpResponse(
+        str(current_count)
+    )
