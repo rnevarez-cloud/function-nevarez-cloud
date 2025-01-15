@@ -4,8 +4,8 @@ import json
 
 app = func.FunctionApp()
 
-@app.function_name(name="test_function")
-@app.route(route="hello")
+@app.function_name(name="update_views")
+@app.route(route="views")
 @app.cosmos_db_input(arg_name="inputDocument", 
                      database_name="view_counter", 
                      container_name="view_container",
@@ -17,7 +17,7 @@ app = func.FunctionApp()
                      create_if_not_exists=True,
                      connection="CosmosDbConnectionSetting")
 
-def test_function(inputDocument: func.DocumentList,
+def update_views(inputDocument: func.DocumentList,
                   outputDocument: func.Out[func.Document],
                   req: func.HttpRequest) -> func.HttpResponse:
 
@@ -35,5 +35,5 @@ def test_function(inputDocument: func.DocumentList,
     logging.info(f'New page count: {current_count}')
 
     return func.HttpResponse(
-        current_count
+        str(current_count)
     )
