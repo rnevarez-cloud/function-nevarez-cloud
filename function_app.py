@@ -2,7 +2,7 @@ import azure.functions as func
 import logging
 import json
 
-app = func.FunctionApp()
+app = func.FunctionApp(http_auth_level=func.AuthLevel.ANONYMOUS)
 
 @app.function_name(name="update_views")
 @app.route(route="views")
